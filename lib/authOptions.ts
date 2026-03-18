@@ -2,7 +2,7 @@ import type { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
 import connectDB from '@/lib/mongodb';
-import User from '@/lib/models/User';
+import User, { type Username } from '@/lib/models/User';
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -16,6 +16,7 @@ export const authOptions: NextAuthOptions = {
         if (!credentials?.username || !credentials?.pin) return null;
 
         await connectDB();
+
         const user = await User.findOne({
           username: credentials.username.toLowerCase(),
         });
@@ -27,7 +28,7 @@ export const authOptions: NextAuthOptions = {
 
         return {
           id: user._id.toString(),
-          username: user.username,
+          username: user.username as Username,
           name: user.name,
           emoji: user.emoji,
           color: user.color,
@@ -40,19 +41,23 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.username = (user as { username: string }).username;
+        token.username = user.username as Username;
         token.name = user.name ?? '';
-        token.emoji = (user as { emoji: string }).emoji;
-        token.color = (user as { color: string }).color;
+        token.emoji = user.emoji as string;
+        token.color = user.color as string;
       }
       return token;
     },
+
     async session({ session, token }) {
-      session.user.id = token.id as string;
-      session.user.username = token.username as 'bhuvi' | 'karthic';
-      session.user.name = token.name as string;
-      session.user.emoji = token.emoji as string;
-      session.user.color = token.color as string;
+      if (session.user) {
+        session.user.id = token.id as string;
+        session.user.username = token.username as Username;
+        session.user.name = token.name as string;
+        session.user.emoji = token.emoji as string;
+        session.user.color = token.color as string;
+      }
+
       return session;
     },
   },
