@@ -83,7 +83,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               className="font-bc font-black text-sm tracking-wide"
               style={{ color: playerColor }}
             >
-              {session.user.name.toUpperCase()}
+              {(session.user.name ?? session.user.username).toUpperCase()}
             </span>
           </div>
 

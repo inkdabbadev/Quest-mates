@@ -45,43 +45,28 @@ export const XP = {
 } as const;
 
 // Default goals data
+const EMPTY_MILESTONE_SET: PlayerGoals = {
+  fit: [
+    { label: '', val: '', cls: 'ms-now' },
+    { label: '', val: '', cls: 'ms-9m' },
+  ],
+  fin: [
+    { label: '', val: '', cls: 'ms-now' },
+    { label: '', val: '', cls: 'ms-1m' },
+    { label: '', val: '', cls: 'ms-3m' },
+    { label: '', val: '', cls: 'ms-9m' },
+  ],
+  soc: [
+    { label: '', val: '', cls: 'ms-now' },
+    { label: '', val: '', cls: 'ms-1m' },
+    { label: '', val: '', cls: 'ms-3m' },
+    { label: '', val: '', cls: 'ms-9m' },
+  ],
+};
+
 export const DEFAULT_GOALS: Record<'bhuvi' | 'karthic', PlayerGoals> = {
-  bhuvi: {
-    fit: [
-      { label: 'Now (weight)', val: '72 kg', cls: 'ms-now' },
-      { label: '9 Month target', val: '65 kg', cls: 'ms-9m' },
-    ],
-    fin: [
-      { label: 'Now (debt)', val: '-6,00,000', cls: 'ms-now' },
-      { label: '1 Month', val: '-4,00,000', cls: 'ms-1m' },
-      { label: '3 Month', val: '1L saved', cls: 'ms-3m' },
-      { label: '9 Month', val: '30L saved', cls: 'ms-9m' },
-    ],
-    soc: [
-      { label: 'Now', val: '9.5k', cls: 'ms-now' },
-      { label: '1 Month', val: '12k', cls: 'ms-1m' },
-      { label: '3 Month', val: '25k', cls: 'ms-3m' },
-      { label: '9 Month', val: '80k', cls: 'ms-9m' },
-    ],
-  },
-  karthic: {
-    fit: [
-      { label: 'Now (weight)', val: '72 kg', cls: 'ms-now' },
-      { label: '9 Month target', val: '65 kg', cls: 'ms-9m' },
-    ],
-    fin: [
-      { label: 'Now (debt)', val: '-6,00,000', cls: 'ms-now' },
-      { label: '1 Month', val: '-4,00,000', cls: 'ms-1m' },
-      { label: '3 Month', val: '1L saved', cls: 'ms-3m' },
-      { label: '9 Month', val: '30L saved', cls: 'ms-9m' },
-    ],
-    soc: [
-      { label: 'Now', val: '9.5k', cls: 'ms-now' },
-      { label: '1 Month', val: '12k', cls: 'ms-1m' },
-      { label: '3 Month', val: '25k', cls: 'ms-3m' },
-      { label: '9 Month', val: '80k', cls: 'ms-9m' },
-    ],
-  },
+  bhuvi:   EMPTY_MILESTONE_SET,
+  karthic: EMPTY_MILESTONE_SET,
 };
 
 // ─── XP Utils ─────────────────────────────────────────────────────────────────

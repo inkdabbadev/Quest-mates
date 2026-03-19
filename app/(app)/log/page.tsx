@@ -138,6 +138,7 @@ export default function LogPage() {
     myLog.water     !== '' ||
     myLog.sleep     !== '' ||
     myLog.savings   !== '' ||
+    myLog.spend     !== '' ||
     myLog.followers !== '';
 
   // ── Submit handlers ───────────────────────────────────────────────────────

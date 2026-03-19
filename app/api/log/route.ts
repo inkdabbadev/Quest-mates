@@ -10,7 +10,9 @@ import type { LoggedFields as ILoggedFields } from '@/types';
 import { XP, CHECKPOINTS, getCurrentCP } from '@/lib/constants';
 
 function todayStr(): string {
-  return new Date().toISOString().slice(0, 10);
+  // IST = UTC+5:30; use consistent local date for India users
+  const ist = new Date(Date.now() + 19800000);
+  return ist.toISOString().slice(0, 10);
 }
 
 const EMPTY_LOGGED: ILoggedFields = {

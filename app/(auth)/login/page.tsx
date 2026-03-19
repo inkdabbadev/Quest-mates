@@ -279,7 +279,7 @@ export default function LoginPage() {
                   fontSize: 10,
                   fontWeight: 700,
                   color: selected === key ? p.color : 'var(--muted)',
-                  fontFamily: "'Barlow Condensed', sans-serif",
+                  fontFamily: "'Chakra Petch', sans-serif",
                 }}
               >
                 <BsShieldFill size={8} />

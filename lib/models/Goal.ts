@@ -17,7 +17,7 @@ export interface IGoal extends Document {
 
 const MilestoneSchema = new Schema<GoalMilestone>(
   {
-    label: { type: String, required: true },
+    label: { type: String, default: '' },
     val: { type: String, default: '' },
     cls: { type: String, default: 'ms-9m' },
   },

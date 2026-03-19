@@ -86,12 +86,15 @@ export default function MapPage() {
     karthic: { totalXP: 0, todayXP: 0, todayFit: 0, todayFin: 0, todaySoc: 0 },
   });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   const fetchXP = useCallback(async () => {
+    setError(false);
     try {
       const res = await fetch('/api/xp');
       if (res.ok) setState(await res.json());
-    } catch { /* silent */ }
+      else setError(true);
+    } catch { setError(true); }
     finally { setLoading(false); }
   }, []);
 
@@ -109,10 +112,12 @@ export default function MapPage() {
   const nextCP = CHECKPOINTS[Math.min(cpIdx + 1, 11)];
   const path  = buildPath(MAP_W, MAP_H);
 
-  // Avatar position (current checkpoint)
-  const [avWx, avWy] = WAYPOINTS[cpIdx];
-  const ax = MAP_W * avWx / 100;
-  const ay = MAP_H * avWy / 100;
+  // Avatar position — interpolated between current and next checkpoint based on XP progress
+  const [avWx0, avWy0] = WAYPOINTS[cpIdx];
+  const [avWx1, avWy1] = WAYPOINTS[Math.min(cpIdx + 1, 11)];
+  const t = pct / 100;
+  const ax = MAP_W * (avWx0 + (avWx1 - avWx0) * t) / 100;
+  const ay = MAP_H * (avWy0 + (avWy1 - avWy0) * t) / 100;
 
   // Champion position (last checkpoint)
   const [chWx, chWy] = WAYPOINTS[11];
@@ -126,6 +131,22 @@ export default function MapPage() {
           <GiPathDistance size={42} style={{ color: 'var(--bhuvi)', margin: '0 auto 12px', animation: 'float 1.5s ease-in-out infinite' }} />
           <p className="font-bc font-black text-sm tracking-wider" style={{ color: 'var(--muted)' }}>LOADING MAP...</p>
         </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-4" style={{ height: 400 }}>
+        <GiPathDistance size={36} style={{ color: 'var(--muted2)' }} />
+        <p className="font-bc font-bold text-sm tracking-wider" style={{ color: 'var(--muted)' }}>FAILED TO LOAD MAP</p>
+        <button
+          onClick={() => { setLoading(true); fetchXP(); }}
+          className="font-bc font-black text-xs px-4 py-2 rounded-xl"
+          style={{ background: 'var(--bg3)', border: '1px solid var(--border2)', color: 'var(--text2)', cursor: 'pointer' }}
+        >
+          RETRY
+        </button>
       </div>
     );
   }
@@ -153,7 +174,7 @@ export default function MapPage() {
                   color: active ? color : 'var(--muted)',
                   border: 'none',
                   cursor: 'pointer',
-                  fontFamily: "'Barlow Condensed', sans-serif",
+                  fontFamily: "'Chakra Petch', sans-serif",
                   fontWeight: 800,
                   fontSize: 15,
                   letterSpacing: '0.4px',
@@ -226,11 +247,13 @@ export default function MapPage() {
 
           {/* Checkpoint dots (skip current avatar pos + champion pos) */}
           {CHECKPOINTS.map((_, i) => {
-            if (i === cpIdx || i === 11) return null;
+            // Hide champion position (avatar at end) and hide cpIdx only when avatar is sitting exactly on it (pct === 0)
+            if (i === 11 || (i === cpIdx && pct === 0)) return null;
             const [wx, wy] = WAYPOINTS[i];
             const dx = MAP_W * wx / 100;
             const dy = MAP_H * wy / 100;
-            const done = i < cpIdx;
+            // cpIdx is "done" once the avatar has moved past it (pct > 0)
+            const done = i < cpIdx || (i === cpIdx && pct > 0);
             return (
               <g key={i}>
                 {/* Outer white ring */}

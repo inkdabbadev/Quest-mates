@@ -8,10 +8,6 @@ const config: Config = {
   ],
   theme: {
     extend: {
-      fontFamily: {
-        barlow: ['Barlow', 'sans-serif'],
-        'barlow-condensed': ['Barlow Condensed', 'sans-serif'],
-      },
       colors: {
         bg: '#0F1117',
         bg2: '#1A1D26',

@@ -16,16 +16,19 @@ interface RivalsData {
 export default function RivalsPage() {
   const [data, setData] = useState<RivalsData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [nudgeSent, setNudgeSent] = useState<number | null>(null);
   const [toast, setToast] = useState('');
 
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 2400); };
 
   const fetchData = useCallback(async () => {
+    setError(false);
     try {
       const res = await fetch('/api/xp');
       if (res.ok) setData(await res.json());
-    } catch { /* silent */ }
+      else setError(true);
+    } catch { setError(true); }
     finally { setLoading(false); }
   }, []);
 
@@ -48,11 +51,25 @@ export default function RivalsPage() {
     </div>
   );
 
-  if (!data) return null;
+  if (error || !data) return (
+    <div className="flex flex-col items-center justify-center gap-4" style={{ height: 400 }}>
+      <GiCrossedSwords size={36} style={{ color: 'var(--muted2)' }} />
+      <p className="font-bc font-bold text-sm tracking-wider" style={{ color: 'var(--muted)' }}>
+        FAILED TO LOAD
+      </p>
+      <button
+        onClick={() => { setLoading(true); fetchData(); }}
+        className="font-bc font-black text-xs px-4 py-2 rounded-xl"
+        style={{ background: 'var(--bg3)', border: '1px solid var(--border2)', color: 'var(--text2)', cursor: 'pointer' }}
+      >
+        RETRY
+      </button>
+    </div>
+  );
 
   const bXP = data.bhuvi.totalXP, kXP = data.karthic.totalXP;
-  const total = bXP + kXP || 1;
-  const bPct = Math.round((bXP / total) * 100);
+  const total = bXP + kXP;
+  const bPct = total === 0 ? 50 : Math.round((bXP / total) * 100);
   const kPct = 100 - bPct;
   const bCfg = PLAYER_CONFIG.bhuvi, kCfg = PLAYER_CONFIG.karthic;
   const bWinning = bXP >= kXP;
@@ -137,7 +154,7 @@ export default function RivalsPage() {
                   color: bCfg.color,
                   fontSize: 11,
                   fontWeight: 800,
-                  fontFamily: "'Barlow Condensed'",
+                  fontFamily: "'Chakra Petch', sans-serif",
                 }}
               >
                 <RiFireFill size={10} /> WINNING
@@ -204,7 +221,7 @@ export default function RivalsPage() {
                   color: kCfg.color,
                   fontSize: 11,
                   fontWeight: 800,
-                  fontFamily: "'Barlow Condensed'",
+                  fontFamily: "'Chakra Petch', sans-serif",
                 }}
               >
                 <RiFireFill size={10} /> WINNING
@@ -289,8 +306,8 @@ export default function RivalsPage() {
 
         <div className="px-4 pb-4 pt-1 space-y-4">
           {cats.map((cat, i) => {
-            const catTotal = cat.b + cat.k || 1;
-            const bCatPct = Math.round((cat.b / catTotal) * 100);
+            const catTotal = cat.b + cat.k;
+            const bCatPct = catTotal === 0 ? 50 : Math.round((cat.b / catTotal) * 100);
             const kCatPct = 100 - bCatPct;
             const winner = cat.b > cat.k ? 'b' : cat.k > cat.b ? 'k' : 'tie';
 

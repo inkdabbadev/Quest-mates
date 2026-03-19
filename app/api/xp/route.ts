@@ -1,12 +1,13 @@
+export const dynamic = 'force-dynamic';
+
 import { NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import User from '@/lib/models/User';
 import DailyLog from '@/lib/models/DailyLog';
 
-export const dynamic = 'force-dynamic';
-
 function todayStr(): string {
-  return new Date().toISOString().slice(0, 10);
+  const ist = new Date(Date.now() + 19800000);
+  return ist.toISOString().slice(0, 10);
 }
 
 export async function GET() {
