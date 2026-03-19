@@ -3,6 +3,8 @@ import connectDB from '@/lib/mongodb';
 import User from '@/lib/models/User';
 import DailyLog from '@/lib/models/DailyLog';
 
+export const dynamic = 'force-dynamic';
+
 function todayStr(): string {
   return new Date().toISOString().slice(0, 10);
 }
@@ -41,7 +43,9 @@ export async function GET() {
       }
     }
 
-    return NextResponse.json(result);
+    return NextResponse.json(result, {
+      headers: { 'Cache-Control': 'no-store, max-age=0' },
+    });
   } catch (error) {
     console.error('GET /api/xp error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

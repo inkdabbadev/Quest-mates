@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/authOptions';
+
+export const dynamic = 'force-dynamic';
 import connectDB from '@/lib/mongodb';
 import User from '@/lib/models/User';
 import Goal from '@/lib/models/Goal';
@@ -24,7 +26,9 @@ export async function GET(req: NextRequest) {
         const goal = g as typeof goals[0];
         result[goal.username] = { fit: goal.fit, fin: goal.fin, soc: goal.soc };
       }
-      return NextResponse.json(result);
+      return NextResponse.json(result, {
+        headers: { 'Cache-Control': 'no-store, max-age=0' },
+      });
     }
 
     const session = await getServerSession(authOptions);

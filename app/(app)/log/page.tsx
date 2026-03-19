@@ -121,7 +121,8 @@ export default function LogPage() {
 
   // ── Build loggedFields: only fields that have actual values in the form ────
   const buildLoggedFields = (): string[] => {
-    const lf: string[] = ['workout']; // workout is always present (it's a toggle)
+    const lf: string[] = [];
+    if (myLog.workout)          lf.push('workout');
     if (myLog.steps     !== '') lf.push('steps');
     if (myLog.water     !== '') lf.push('water');
     if (myLog.sleep     !== '') lf.push('sleep');
