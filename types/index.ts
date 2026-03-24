@@ -57,6 +57,8 @@ export interface PlayerState {
   todayFit: number;
   todayFin: number;
   todaySoc: number;
+  streak: number;
+  longestStreak: number;
 }
 
 export interface BothPlayersState {

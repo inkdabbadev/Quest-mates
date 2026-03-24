@@ -15,6 +15,34 @@ function todayStr(): string {
   return ist.toISOString().slice(0, 10);
 }
 
+/** Parse a YYYY-MM-DD string as an explicit UTC midnight timestamp.
+ *  Using Date.UTC() avoids any runtime-timezone or DST ambiguity that
+ *  can occur when passing a bare date string to `new Date()`. */
+function parseDayUTC(dateStr: string): number {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return Date.UTC(y, m - 1, d);
+}
+
+/**
+ * Streak logic with 1-day grace period.
+ *
+ * Rules:
+ *   - diff === 0 → already logged today, streak unchanged
+ *   - diff === 1 → consecutive day, streak +1
+ *   - diff === 2 → missed 1 day (grace), streak +1 (streak survives a single missed day)
+ *   - diff  > 2 → missed 2+ days, streak resets to 1
+ *   - no lastLogDate → first ever log, streak starts at 1
+ */
+function calcStreak(lastLogDate: string | null, today: string, currentStreak: number): number {
+  if (!lastLogDate) return 1;
+  // Both strings are YYYY-MM-DD (IST) — compare as pure UTC midnight values
+  // so the result is always an exact integer regardless of server timezone.
+  const diffDays = (parseDayUTC(today) - parseDayUTC(lastLogDate)) / 86400000;
+  if (diffDays === 0) return currentStreak;          // already logged today
+  if (diffDays <= 2) return currentStreak + 1;       // consecutive or 1 grace day
+  return 1;                                           // broke streak
+}
+
 const EMPTY_LOGGED: ILoggedFields = {
   workout: false, steps: false, water: false,
   sleep: false, savings: false, followers: false,
@@ -170,6 +198,14 @@ export async function POST(req: NextRequest) {
     const newTotalXP = user.totalXP + xpDiff;
     const newCP      = getCurrentCP(newTotalXP);
 
+    // ── Streak: only update when this is the first log of today ──────────────
+    const isFirstLogToday  = !ex; // no existing log document means first submit today
+    const currentStreak    = user.streak ?? 0;
+    const newStreak        = isFirstLogToday
+      ? calcStreak(user.lastLogDate ?? null, today, currentStreak)
+      : currentStreak;
+    const newLongestStreak = Math.max(user.longestStreak ?? 0, newStreak);
+
     // ── Upsert the daily log ──────────────────────────────────────────────────
     await DailyLog.findOneAndUpdate(
       { username, date: today },
@@ -190,23 +226,35 @@ export async function POST(req: NextRequest) {
       { upsert: true, new: true }
     );
 
-    // ── Update user total XP only if it changed ───────────────────────────────
-    if (xpDiff !== 0) {
-      await User.updateOne({ username }, { $inc: { totalXP: xpDiff } });
+    // ── Update user total XP and streak ──────────────────────────────────────
+    const userUpdate: Record<string, unknown> = {};
+    if (xpDiff !== 0) userUpdate['$inc'] = { totalXP: xpDiff };
+    if (isFirstLogToday) {
+      userUpdate['$set'] = {
+        streak: newStreak,
+        longestStreak: newLongestStreak,
+        lastLogDate: today,
+      };
+    }
+    if (Object.keys(userUpdate).length > 0) {
+      await User.updateOne({ username }, userUpdate);
     }
 
     const isAllLogged = Object.values(newLogged).every(Boolean);
 
     return NextResponse.json({
-      success:    true,
-      xpEarned:   newXP.total,
+      success:       true,
+      xpEarned:      newXP.total,
       xpDiff,
       newTotalXP,
       prevCP,
       newCP,
       isAllLogged,
-      logged:     newLogged,
-      checkpoint: newCP > prevCP ? CHECKPOINTS[newCP] : undefined,
+      logged:        newLogged,
+      checkpoint:    newCP > prevCP ? CHECKPOINTS[newCP] : undefined,
+      streak:        newStreak,
+      longestStreak: newLongestStreak,
+      isNewStreakDay: isFirstLogToday,
     });
   } catch (err) {
     console.error('POST /api/log error:', err);

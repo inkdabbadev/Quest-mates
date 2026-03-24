@@ -9,6 +9,9 @@ export interface IUser extends Document {
   color: string;
   pinHash: string;
   totalXP: number;
+  streak: number;
+  longestStreak: number;
+  lastLogDate: string | null; // 'YYYY-MM-DD' in IST
   createdAt: Date;
   updatedAt: Date;
 }
@@ -40,6 +43,18 @@ const UserSchema = new Schema<IUser>(
     totalXP: {
       type: Number,
       default: 0,
+    },
+    streak: {
+      type: Number,
+      default: 0,
+    },
+    longestStreak: {
+      type: Number,
+      default: 0,
+    },
+    lastLogDate: {
+      type: String,
+      default: null,
     },
   },
   { timestamps: true }

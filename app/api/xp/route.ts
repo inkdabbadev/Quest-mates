@@ -24,14 +24,18 @@ export async function GET() {
       todayFit: number;
       todayFin: number;
       todaySoc: number;
+      streak: number;
+      longestStreak: number;
     }> = {
-      bhuvi:   { totalXP: 0, todayXP: 0, todayFit: 0, todayFin: 0, todaySoc: 0 },
-      karthic: { totalXP: 0, todayXP: 0, todayFit: 0, todayFin: 0, todaySoc: 0 },
+      bhuvi:   { totalXP: 0, todayXP: 0, todayFit: 0, todayFin: 0, todaySoc: 0, streak: 0, longestStreak: 0 },
+      karthic: { totalXP: 0, todayXP: 0, todayFit: 0, todayFin: 0, todaySoc: 0, streak: 0, longestStreak: 0 },
     };
 
     for (const user of users) {
-      const u = user as typeof users[0];
-      result[u.username].totalXP = u.totalXP;
+      const u = user as typeof users[0] & { streak?: number; longestStreak?: number };
+      result[u.username].totalXP       = u.totalXP;
+      result[u.username].streak        = u.streak ?? 0;
+      result[u.username].longestStreak = u.longestStreak ?? 0;
     }
 
     for (const log of logs) {

@@ -76,6 +76,8 @@ export default function LogPage() {
   const [pendingSubmit, setPendingSubmit] = useState(false);
   const [unlockCP, setUnlockCP]       = useState<Checkpoint | null>(null);
   const [toast, setToast]             = useState('');
+  // null = still loading; number = loaded (0 means no streak yet)
+  const [myStreak, setMyStreak]       = useState<number | null>(null);
 
   const myUsername    = session?.user?.username;
   const otherUsername = myUsername === 'bhuvi' ? 'karthic' : 'bhuvi';
@@ -116,7 +118,15 @@ export default function LogPage() {
     } catch { /* silent */ }
   }, [myUsername, otherUsername]);
 
-  useEffect(() => { if (myUsername) fetchTodayLogs(); }, [fetchTodayLogs, myUsername]);
+  useEffect(() => {
+    if (!myUsername) return;
+    fetchTodayLogs();
+    // Fetch streak from XP endpoint
+    fetch('/api/xp')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d && d[myUsername]) setMyStreak(d[myUsername].streak ?? 0); })
+      .catch(() => {});
+  }, [fetchTodayLogs, myUsername]);
   useEffect(() => { setXpPreview(calcXPPreview(myLog)); }, [myLog]);
 
   // ── Build loggedFields: only fields that have actual values in the form ────
@@ -176,14 +186,20 @@ export default function LogPage() {
       if (res.ok) {
         const data = await res.json();
         const remaining = 6 - Object.values(data.logged as ILoggedFields).filter(Boolean).length;
+        const streakMsg = data.isNewStreakDay && data.streak > 1
+          ? ` 🔥 ${data.streak} day streak!`
+          : data.isNewStreakDay && data.streak === 1
+          ? ' 🔥 Streak started!'
+          : '';
         const msg = data.isAllLogged
-          ? `🎉 All 6 done! ${data.xpEarned} XP total today — come back tomorrow!`
+          ? `🎉 All 6 done! ${data.xpEarned} XP total today${streakMsg}`
           : data.xpDiff > 0
-            ? `⚡ +${data.xpDiff} XP! ${remaining} more to log today.`
-            : `✅ Saved! ${remaining} more ${remaining === 1 ? 'activity' : 'activities'} to log today.`;
+            ? `⚡ +${data.xpDiff} XP! ${remaining} more to log today.${streakMsg}`
+            : `✅ Saved! ${remaining} more ${remaining === 1 ? 'activity' : 'activities'} to log today.${streakMsg}`;
         showToast(msg);
         setTodayLogged(data.logged ?? EMPTY_LOGGED);
         setHasExisting(true);
+        if (data.streak !== undefined) setMyStreak(data.streak);
         if (data.newCP !== undefined && data.newCP > data.prevCP) setUnlockCP(data.checkpoint);
         await fetchTodayLogs(); // re-populate form with saved values
       } else {
@@ -225,12 +241,38 @@ export default function LogPage() {
             </div>
             <p className="text-xs font-semibold mt-0.5 capitalize" style={{ color: 'var(--muted)' }}>{today}</p>
           </div>
-          {xpPreview.total > 0 && (
-            <div className="xp-badge animate-slide-down">
-              <BsLightningChargeFill size={11} />
-              <span>+{xpPreview.total} XP</span>
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            {/* Streak badge — shows '–' while loading, number once fetched */}
+            {(() => {
+              const streakLoaded = myStreak !== null;
+              const streakVal    = myStreak ?? 0;
+              const streakActive = streakVal > 0;
+              return (
+                <div
+                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl"
+                  style={{
+                    background: streakActive ? `${myCfg.color}12` : 'var(--bg3)',
+                    border: `1px solid ${streakActive ? myCfg.color + '30' : 'var(--border2)'}`,
+                  }}
+                >
+                  <RiFireFill size={13} style={{ color: streakActive ? myCfg.color : 'var(--muted2)' }} />
+                  <span
+                    className="font-bc font-black text-sm"
+                    style={{ color: streakActive ? myCfg.color : 'var(--muted2)' }}
+                  >
+                    {streakLoaded ? streakVal : '–'}
+                  </span>
+                  <span className="text-xs font-medium" style={{ color: 'var(--muted2)' }}>day</span>
+                </div>
+              );
+            })()}
+            {xpPreview.total > 0 && (
+              <div className="xp-badge animate-slide-down">
+                <BsLightningChargeFill size={11} />
+                <span>+{xpPreview.total} XP</span>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

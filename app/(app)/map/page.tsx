@@ -7,7 +7,7 @@ import {
   getCurrentCP, getProgress, buildPath,
 } from '@/lib/constants';
 import type { BothPlayersState } from '@/types';
-import { RiMapPinFill, RiLockFill, RiVipCrownFill } from 'react-icons/ri';
+import { RiMapPinFill, RiLockFill, RiVipCrownFill, RiFireFill } from 'react-icons/ri';
 import { BsLightningChargeFill, BsStarFill, BsCheckCircleFill } from 'react-icons/bs';
 import { GiTrophy, GiPathDistance } from 'react-icons/gi';
 
@@ -82,8 +82,8 @@ export default function MapPage() {
   const { data: session } = useSession();
   const [activePlayer, setActivePlayer] = useState<PKey>('bhuvi');
   const [state, setState] = useState<BothPlayersState>({
-    bhuvi:   { totalXP: 0, todayXP: 0, todayFit: 0, todayFin: 0, todaySoc: 0 },
-    karthic: { totalXP: 0, todayXP: 0, todayFit: 0, todayFin: 0, todaySoc: 0 },
+    bhuvi:   { totalXP: 0, todayXP: 0, todayFit: 0, todayFin: 0, todaySoc: 0, streak: 0, longestStreak: 0 },
+    karthic: { totalXP: 0, todayXP: 0, todayFit: 0, todayFin: 0, todaySoc: 0, streak: 0, longestStreak: 0 },
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -391,6 +391,68 @@ export default function MapPage() {
                 transition: 'width 1s cubic-bezier(0.4, 0, 0.2, 1)',
               }}
             />
+          </div>
+        </div>
+      </div>
+
+      {/* ── Streak card ────────────────────────────────────────────── */}
+      <div className="mx-4 mt-4">
+        <div
+          className="rounded-2xl p-4"
+          style={{
+            background: 'var(--bg2)',
+            border: '1px solid var(--border2)',
+          }}
+        >
+          <div className="flex items-center gap-2 mb-3">
+            <RiFireFill size={14} style={{ color: '#FF6B35' }} />
+            <span className="font-bc font-black text-xs tracking-widest" style={{ color: 'var(--muted)' }}>
+              STREAKS
+            </span>
+            <div className="flex-1 h-px" style={{ background: 'var(--border2)' }} />
+            <span className="text-xs font-medium" style={{ color: 'var(--muted2)' }}>
+              1 grace day allowed
+            </span>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            {(['bhuvi', 'karthic'] as PKey[]).map(pk => {
+              const pkCfg = PLAYER_CONFIG[pk];
+              const pkStreak = state[pk].streak;
+              const pkLongest = state[pk].longestStreak;
+              const isActive = activePlayer === pk;
+              return (
+                <div
+                  key={pk}
+                  className="rounded-xl p-3 text-center"
+                  style={{
+                    background: isActive ? `${pkCfg.color}10` : 'var(--bg3)',
+                    border: `1px solid ${isActive ? pkCfg.color + '30' : 'var(--border2)'}`,
+                  }}
+                >
+                  <div className="flex items-center justify-center gap-1.5 mb-1">
+                    <span style={{ fontSize: 16 }}>{pkCfg.emoji}</span>
+                    <span className="font-bc font-bold text-xs" style={{ color: pkCfg.color }}>{pkCfg.name}</span>
+                  </div>
+                  <div
+                    className="font-bc font-black"
+                    style={{ fontSize: 34, color: pkStreak > 0 ? pkCfg.color : 'var(--muted2)', lineHeight: 1 }}
+                  >
+                    {pkStreak}
+                  </div>
+                  <div className="flex items-center justify-center gap-1 mt-0.5">
+                    <RiFireFill size={10} style={{ color: pkStreak > 0 ? pkCfg.color : 'var(--muted2)', opacity: 0.7 }} />
+                    <span className="text-xs font-semibold" style={{ color: 'var(--muted)' }}>
+                      day streak
+                    </span>
+                  </div>
+                  {pkLongest > 0 && (
+                    <div className="mt-1.5 text-xs font-medium" style={{ color: 'var(--muted2)' }}>
+                      best: {pkLongest}d
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
